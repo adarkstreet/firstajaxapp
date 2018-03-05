@@ -25,6 +25,11 @@ class GamesController < ApplicationController
     end
   end
 
+  def form
+    @game = Game.new
+    render partial: 'form'
+  end
+
   def destroy
     @game.destroy
     render json: { message: 'Removed' }, status: :ok

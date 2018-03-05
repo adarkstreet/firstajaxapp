@@ -5,13 +5,7 @@
     <button class="btn" id="toggle">Show Form</button>
     <ul id="games-list">
       <% @games.each do |game| %>
-        <li
-          class="game-item"
-          data-id= <%= game.id %>
-          data-name="<%= game.name %>"
-        >
-          <%= game.name %> - <%= game.description %>
-        </li>
+        <%= render partial: 'game', locals: { game: game } %>
       <% end %>
     </ul>
   </div>

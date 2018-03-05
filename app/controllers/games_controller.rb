@@ -6,6 +6,12 @@ class GamesController < ApplicationController
   end
 
   def show
+    render partial: 'game', locals: { game: @game }
+  end
+
+  def form
+    @game = params[:id] ? Game.find(params[:id]) : Game.new
+    render partial: 'form'
   end
 
   def create
@@ -23,11 +29,6 @@ class GamesController < ApplicationController
     else
       render_error(@game)
     end
-  end
-
-  def form
-    @game = Game.new
-    render partial: 'form'
   end
 
   def destroy

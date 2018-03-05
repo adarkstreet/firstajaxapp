@@ -1,6 +1,9 @@
+//Game state
 var currentGame = {}
 var showForm = false
+var editingGame;
 
+//Helper functions
 function toggleForm() {
   showForm = !showForm;
   $('#game-form').remove();
@@ -9,52 +12,77 @@ function toggleForm() {
   if (showForm) {
     $.ajax({
       url: '/game_form',
-      method: 'GET'
+      method: 'GET',
+      data: { id: editingGame }
     }).done( function(html) {
       $('#toggle').after(html)
     });
   }
 }
 
+function getGame(id) {
+  $.ajax({
+    url: '/games/' + id,
+    type: 'GET'
+  }).done( function(game) {
+    if (editingGame) {
+      var li = $("[data-id='" + id + "'")
+      $(li).replaceWith(game)
+      editingGame = null;
+    } else {
+      $('#games-list').append(game);
+    }
+  });
+}
+
 $(document).ready( function() {
+  $(document).on('click', '#delete-game', function() {
+    var id = $(this).siblings('.game-item').data().id
+    $.ajax({
+      url: '/games/' + id,
+      type: 'DELETE'
+    }).done( function() {
+      var row = $("[data-id='" + id + "'")
+      row.parent().remove('li')
+    });
+  });
+
+  $(document).on('click', '#edit-game', function() {
+    editingGame = $(this).siblings('.game-item').data().id
+    toggleForm();
+  });
+
+  //Form submit handler
   $(document).on('submit', '#game-form form', function(e) {
     e.preventDefault();
-    toggleForm();
     var data = $(this).serializeArray();
+    var url = '/games';
+    var method = 'POST';
+    if (editingGame) {
+      url = url + '/' + editingGame;
+      method = 'PUT'
+    }
+
     $.ajax({
-      url: '/games',
-      type: 'POST',
+      url: url,
+      type: method,
       dataType: 'JSON',
       data: data
     }).done( function(game) {
-      var g = '<li class="game-item" data-id="' + game.id + '" data-name="' + data.name + '">' + game.name + '-' + game.description + '</li>';
-      $('#games-list').append(g);
+      toggleForm();
+      getGame(game.id);
     }).fail( function(err) {
       alert(err.responseJSON.errors)
     });
   });
 
-  function toggleForm() {
-    showForm = !showForm;
-    $('#game-form').remove();
-    $('#games-list').toggle();
-
-    if (showForm) {
-      $.ajax({
-        url: '/game_form',
-        method: 'GET'
-      }).done( function(html) {
-        $('#toggle').after(html)
-      });
-    }
-  }
-
-
+  //Toggle form click handler
   $('#toggle').on('click', function() {
     toggleForm()
   });
 
-  $('.game-item').on('click', function() {
+  //Game select click handler
+  $(document).on('click', '.game-item', function() {
     currentGame.id = this.dataset.id;
     currentGame.name = this.dataset.name;
     $.ajax({
@@ -72,3 +100,6 @@ $(document).ready( function() {
     });
   });
 });
+
+
+
